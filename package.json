@@ -1,6 +1,6 @@
 {
     "name"          : "fp-backend",
-    "version"       : "0.0.1",
+    "version"       : "0.0.3",
     "main"          : "./lib/index.js",
     "private"       : true,
     "description"   : "Flow Pilots backend framework, for internal use only",
