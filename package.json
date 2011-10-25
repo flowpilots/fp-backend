@@ -1,0 +1,25 @@
+{
+    "name"          : "fp-backend",
+    "version"       : "0.0.1",
+    "main"          : "./lib/index.js",
+    "private"       : true,
+    "description"   : "Flow Pilots backend framework, for internal use only",
+    "keywords"      : ["backend"],
+    "author"        : "Ruben Vermeersch <ruben@flowpilots.com>",
+    "engines"       : { "node": ">=0.4.0 <0.5.0" },
+    "dependencies"  : {
+        "coffee-script": ">= 1.1.2",
+        "connect-gzip": ">= 0.1.4",
+        "express": "2.4.7",
+        "express-resource": ">= 0.2.3",
+        "findit": ">= 0.1.1",
+        "jade": ">= 0.16.2",
+        "jadevu": ">= 0.0.9",
+        "mobile-monkeypatches": ">= 0.0.1",
+        "nib": ">= 0.2.0",
+        "stylus": ">= 0.17.0",
+        "systemd": ">= 0.0.2",
+        "uglify-js": ">= 1.1.1"
+    }
+}
+
