@@ -16,6 +16,7 @@
         "jade": ">= 0.16.2",
         "jadevu": ">= 0.0.9",
         "mobile-monkeypatches": ">= 0.0.1",
+        "mongoose": ">= 2.3.7",
         "nib": ">= 0.2.0",
         "stylus": ">= 0.17.0",
         "systemd": ">= 0.0.2",

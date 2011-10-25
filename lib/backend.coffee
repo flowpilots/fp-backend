@@ -13,6 +13,8 @@ defaultOptions =
             path: 'client-src'
             pack: []
 
+config = {}
+
 mergeOptions = (options, configure) ->
     # Options parameter is optional (configure too actually,
     # but that's unlikely)
@@ -39,6 +41,7 @@ launchApp = (options, app) ->
 
 start = (options, configure) ->
     [options, configure] = mergeOptions options, configure
+    config = options
 
     # Optional modules
     require 'systemd' if options.useSystemd
@@ -55,3 +58,4 @@ start = (options, configure) ->
 
 module.exports =
     start: start
+    config: () -> config # hack needed to prevent circular refs
