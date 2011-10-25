@@ -56,3 +56,9 @@ module.exports = (options, app) ->
 
     app.configure 'production', ->
         app.use express.errorHandler()
+
+    if options.allowCSR
+        app.all "*", (req, res, next) ->
+            res.header "Access-Control-Allow-Origin", "*"
+            res.header "Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Authorization"
+            next()

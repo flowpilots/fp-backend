@@ -7,6 +7,7 @@ defaultOptions =
     useClientJSCompile: true
     useStylus: true
     useJadeVu: true
+    allowCSR: false
     standalonePort: 3000
     clientJSCompile:
         app:
