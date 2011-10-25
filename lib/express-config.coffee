@@ -27,7 +27,10 @@ module.exports = (options, app) ->
     app.configure ->
         app.set 'views', dirToProject + '/src/views'
         app.set 'view engine', 'jade'
-        app.set 'view options', layout: false
+        if options.useLayout
+            app.set 'view options', layout: dirToProject + '/src/views/_layout.jade'
+        else
+            app.set 'view options', layout: false
         app.set 'jsonp callback', true
         #app.use express.favicon(dirToProject + '/public/favicon.ico')
         app.use clientJSCompile(dirToProject, options.clientJSCompile) if options.useClientJSCompile
