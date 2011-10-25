@@ -1,4 +1,4 @@
-backend = require './backend'
+backend = require 'fp-backend'
 
 config = backend.config()
 
