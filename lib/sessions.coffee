@@ -1,4 +1,5 @@
 db = require './db'
+express = require 'express'
 
 SessionSchema = new db.Schema
     sid: { type: String, required: true, unique: true, index: true }
@@ -6,11 +7,11 @@ SessionSchema = new db.Schema
 
 Session = db.model('Session', SessionSchema)
 
-class Store
+class Store extends express.session.Store
     get: (sid, cb) ->
         Session.findOne { sid: sid }, (err, result) ->
             return cb(err) if err
-            cb(null, result.data)
+            cb(null, if result then result.data else null)
 
     set: (sid, session, cb) ->
         s =
