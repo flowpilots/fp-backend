@@ -2,7 +2,6 @@ express = require 'express'
 gzip = require 'connect-gzip'
 stylus = require 'stylus'
 nib = require 'nib'
-mongostore = require 'connect-mongodb'
 
 clientJSCompile = require './client-compile'
 
