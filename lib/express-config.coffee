@@ -28,7 +28,7 @@ module.exports = (options, app) ->
     db = require './db'
     sessionOptions =
         secret: 'Flying with Flow Pilots'
-        store: new mongostore db: db.db
+        store: new mongostore(db: db.db)
 
     app.configure ->
         app.set 'views', dirToProject + '/src/views'
