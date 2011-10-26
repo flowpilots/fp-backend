@@ -9,6 +9,7 @@ defaultOptions =
     useJadeVu: true
     useLayout: false
     allowCSR: false
+    trackSession: false
     standalonePort: 3000
     clientJSCompile:
         app:

@@ -25,10 +25,11 @@ module.exports = (options, app) ->
                 .set('compress', true)
                 .use(nib())
 
-    db = require './db'
-    sessionOptions =
-        secret: 'Flying with Flow Pilots'
-        store: new mongostore(db: db.db)
+    if options.trackSession
+        SessionStore = require './sessions'
+        sessionOptions =
+            secret: 'Flying with Flow Pilots'
+            store: new SessionStore()
 
     app.configure ->
         app.set 'views', dirToProject + '/src/views'
@@ -46,7 +47,7 @@ module.exports = (options, app) ->
         app.use express.static(dirToProject + '/public')
         app.use express.bodyParser()
         app.use express.cookieParser()
-        app.use express.session sessionOptions
+        app.use express.session sessionOptions if options.trackSession
         app.use express.methodOverride()
         app.use contentSwitch()
         app.use express.logger()
