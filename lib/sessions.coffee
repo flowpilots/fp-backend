@@ -2,7 +2,7 @@ db = require './db'
 
 SessionSchema = new db.Schema
     sid: { type: String, required: true, unique: true, index: true }
-    data: Mixed
+    data: db.Schema.Types.Mixed
 
 Session = db.model('Session', SessionSchema)
 
