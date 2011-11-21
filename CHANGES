@@ -1,0 +1,5 @@
+v0.2.0 (21/11/2011)
+===================
+
+Changes to the client-compiler, which now requires you to include
+'name.bundle.js' in development and 'name.bundle.min.js' in production.
