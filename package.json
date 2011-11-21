@@ -8,6 +8,7 @@
     "author"        : "Ruben Vermeersch <ruben@flowpilots.com>",
     "engines"       : { "node": ">=0.4.0 <0.5.0" },
     "dependencies"  : {
+        "async": "~ 0.1.15",
         "coffee-script": ">= 1.1.2",
         "connect-gzip": ">= 0.1.4",
         "express": "2.4.7",
