@@ -1,3 +1,9 @@
+v0.2.1 (23/11/2011)
+===================
+
+Renamed Session to ActiveSession to avoid clashes with user-space code in the
+mongo database.
+
 v0.2.0 (21/11/2011)
 ===================
 

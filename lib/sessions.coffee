@@ -1,15 +1,15 @@
 db = require './db'
 express = require 'express'
 
-SessionSchema = new db.Schema
+ActiveSessionSchema = new db.Schema
     sid: { type: String, required: true, unique: true, index: true }
     data: db.Schema.Types.Mixed
 
-Session = db.model('Session', SessionSchema)
+ActiveSession = db.model('ActiveSession', ActiveSessionSchema)
 
 class Store extends express.session.Store
     get: (sid, cb) ->
-        Session.findOne { sid: sid }, (err, result) ->
+        ActiveSession.findOne { sid: sid }, (err, result) ->
             return cb(err) if err
             cb(null, if result then result.data else null)
 
@@ -17,9 +17,9 @@ class Store extends express.session.Store
         s =
             sid: sid
             data: session
-        Session.update { sid: sid }, s, { upsert: true }, cb
+        ActiveSession.update { sid: sid }, s, { upsert: true }, cb
 
     destroy: (sid, cb) ->
-        Session.remove { sid: sid }, cb
+        ActiveSession.remove { sid: sid }, cb
 
 module.exports = Store
