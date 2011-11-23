@@ -57,11 +57,14 @@ compiler = (name, basepath, path, pack, cb) ->
                 return cb(err) if err
                 mod = file.replace(stripPrefix, "")
                 console.log "    \u001b[90mcompile : \u001b[0m\u001b[36m%s\u001b[0m", mod
-                if /.coffee$/.test(file)
-                    js = coffee.compile(js, filename: file)
-                    file = file.replace(/coffee$/, "js")
-                compiled[file] = js
-                cb()
+                try
+                    if /.coffee$/.test(file)
+                        js = coffee.compile(js, filename: file)
+                        file = file.replace(/coffee$/, "js")
+                    compiled[file] = js
+                    cb()
+                catch e
+                    cb(e)
 
     prepareSource = (cb) ->
         walk basepath + '/' + path, (err, args) ->
