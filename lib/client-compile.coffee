@@ -2,7 +2,7 @@ async = require("async")
 http = require("http")
 fs = require("fs")
 coffee = require("coffee-script")
-uglify = require("uglify-js")
+closure = require("closure-compiler")
 findit = require("findit")
 
 compiler = (name, basepath, path, pack, cb) ->
@@ -21,14 +21,10 @@ compiler = (name, basepath, path, pack, cb) ->
         min_file = basepath + "/public/js/#{item}.min.js"
         fs.readFile file, "utf8", (err, js) ->
             cb(err) if err
-            jsp = uglify.parser
-            pro = uglify.uglify
-            ast = jsp.parse(js)
-            ast = pro.ast_mangle(ast)
-            ast = pro.ast_squeeze(ast)
-            out = pro.gen_code(ast)
-            fs.writeFile min_file, out, (err) ->
-                cb(err)
+            closure.compile js, (err, out) ->
+                return cb(err) if err
+                fs.writeFile min_file, out, (err) ->
+                    cb(err)
 
     prepareMinified = (item, minCb) ->
         async.parallel
@@ -137,11 +133,6 @@ compiler = (name, basepath, path, pack, cb) ->
         register: (path, fn) ->
             require.modules[path] = fn
 
-    minifyAll = (cb) ->
-        async.forEach pack, prepareMinified, (err) ->
-            throw err if err
-            cb()
-
     mergeTo = (ext, list) ->
         (item, cb) ->
             file = basepath + "/public/js/#{item}.#{ext}"
@@ -150,6 +141,18 @@ compiler = (name, basepath, path, pack, cb) ->
                 list.push js
                 cb()
 
+    mergeMinifiedBundle = (cb) ->
+        cb(null) # Invoking CB immediately, the rest can happen in the background
+
+        async.forEach pack, prepareMinified, (err) ->
+            throw err if err
+
+            minSrc = []
+            async.forEachSeries pack, mergeTo('min.js', minSrc), (err) ->
+                throw err if err
+                fs.writeFile basepath + "/public/js/#{name}.bundle.min.js", minSrc.join('\n'), (err) ->
+                    throw err if err
+
     mergeBundle = (cb) ->
         develSrc = []
         async.forEachSeries pack, mergeTo('js', develSrc), (err) ->
@@ -157,17 +160,10 @@ compiler = (name, basepath, path, pack, cb) ->
             fs.writeFile basepath + "/public/js/#{name}.bundle.js", develSrc.join('\n'), (err) ->
                 cb(err)
 
-        # Not calling cb here, it happens in the background
-        minSrc = []
-        async.forEachSeries pack, mergeTo('min.js', minSrc), (err) ->
-            throw err if err
-            fs.writeFile basepath + "/public/js/#{name}.bundle.min.js", minSrc.join('\n'), (err) ->
-                throw err if err
-
     async.series [
         prepareSource
-        minifyAll
         mergeBundle
+        mergeMinifiedBundle
     ], cb
 
 module.exports = (basepath, options) ->

@@ -1,3 +1,10 @@
+v0.3.0 (16/12/2011)
+===================
+
+Switch to the Google Closure Compiler for JS-minification as uglify-js breaks
+things. Doing a major version bump because this may in turn break things even
+though I highly doubt it.
+
 v0.2.1 (23/11/2011)
 ===================
 
