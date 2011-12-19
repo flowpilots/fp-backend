@@ -1,3 +1,8 @@
+v0.3.1 (19/12/2011)
+===================
+
+Output a message when bundles have been written.
+
 v0.3.0 (16/12/2011)
 ===================
 
@@ -16,3 +21,7 @@ v0.2.0 (21/11/2011)
 
 Changes to the client-compiler, which now requires you to include
 'name.bundle.js' in development and 'name.bundle.min.js' in production.
+
+Project changes required:
+* Load the .bundle.js. Put this in your view:
+  script(src='/js/app.bundle.' + (process.env.NODE_ENV == 'production' ? 'min.js' : 'js'))
