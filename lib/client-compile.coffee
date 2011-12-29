@@ -56,6 +56,7 @@ compiler = (name, basepath, path, pack, cb) ->
                 try
                     if /.coffee$/.test(file)
                         js = coffee.compile(js, filename: file)
+                        throw new Error("CoffeeScript compile failed for #{file}") if !js
                         file = file.replace(/coffee$/, "js")
                     compiled[file] = js
                     cb()
