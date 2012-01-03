@@ -42,14 +42,13 @@ module.exports = (options, app) ->
         app.use clientJSCompile(dirToProject, options.clientJSCompile) if options.useClientJSCompile
         app.use stylus.middleware(stylusOptions) if options.useStylus and app.settings.env == 'development'
         app.use gzip.gzip()
-        app.use express.logger()
+        app.use express.logger(immediate: true)
         app.use express.static(dirToProject + '/public')
         app.use express.bodyParser()
         app.use express.cookieParser()
         app.use express.session sessionOptions if options.trackSession
         app.use express.methodOverride()
         app.use contentSwitch()
-        app.use express.logger()
 
     app.configure 'development', ->
         app.use express.profiler()
