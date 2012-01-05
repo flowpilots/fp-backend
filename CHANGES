@@ -1,7 +1,9 @@
-v0.3.4 (unreleased)
+v0.3.4 (05/01/2012)
 ===================
 
 Full immediate logging.
+
+Change >= to ~ in dependency specs.
 
 v0.3.3 (29/12/2011)
 ===================
