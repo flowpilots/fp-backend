@@ -151,7 +151,7 @@ compiler = (name, basepath, path, pack, cb) ->
             minSrc = []
             async.forEachSeries pack, mergeTo('min.js', minSrc), (err) ->
                 throw err if err
-                fs.writeFile basepath + "/public/js/#{name}.bundle.min.js", minSrc.join(';\n'), (err) ->
+                fs.writeFile basepath + "/public/js/#{name}.bundle.min.js", minSrc.join('\n'), (err) ->
                     console.log "  \u001b[90m    write : \u001b[0m\u001b[36m%s\u001b[0m", "public/js/#{name}.bundle.min.js"
                     throw err if err
 
