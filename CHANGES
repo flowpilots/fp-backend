@@ -44,6 +44,13 @@ Switch to the Google Closure Compiler for JS-minification as uglify-js breaks
 things. Doing a major version bump because this may in turn break things even
 though I highly doubt it.
 
+v0.2.2 (01/04/2012)
+===================
+
+Hook in autoquit. This will shut down daemons in production after a certain
+amount of time. This is on by default so disable it in your project if this is
+not intended behavior.
+
 v0.2.1 (23/11/2011)
 ===================
 
