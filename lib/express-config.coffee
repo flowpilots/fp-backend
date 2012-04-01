@@ -63,6 +63,8 @@ module.exports = (options, app) ->
         )
 
     app.configure 'production', ->
+        if options.useAutoQuit
+            app.autoQuit({ timeOut: options.autoQuitTimeOut })
         app.use express.errorHandler()
 
     if options.allowCSR

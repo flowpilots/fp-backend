@@ -8,6 +8,8 @@ defaultOptions =
     useStylus: true
     useJadeVu: true
     useLayout: false
+    useAutoQuit: true
+    autoQuitTimeOut: 600
     allowCSR: false
     trackSession: false
     standalonePort: 3000
@@ -50,6 +52,7 @@ start = (options, configure) ->
     require 'systemd' if options.useSystemd
     require 'mobile-monkeypatches' if options.useMonkeyPatches
     require 'jadevu' if options.useJadeVu
+    require 'autoquit' if options.useAutoQuit
 
     # Create app
     app = module.exports = express.createServer()
