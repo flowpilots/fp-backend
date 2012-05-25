@@ -57,6 +57,7 @@ module.exports = (options, app) ->
         app.use app.router
 
     app.configure 'development', ->
+        app.use require('./crash-reporter')(options)
         app.use express.errorHandler(
             dumpExceptions: true
             showStack: true
