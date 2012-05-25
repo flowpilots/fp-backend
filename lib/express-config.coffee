@@ -57,7 +57,6 @@ module.exports = (options, app) ->
         app.use app.router
 
     app.configure 'development', ->
-        app.use require('./crash-reporter')(options)
         app.use express.errorHandler(
             dumpExceptions: true
             showStack: true
@@ -66,6 +65,7 @@ module.exports = (options, app) ->
     app.configure 'production', ->
         if options.useAutoQuit
             app.autoQuit({ timeOut: options.autoQuitTimeOut })
+        app.use require('./crash-reporter')(options)
         app.use express.errorHandler()
 
     if options.allowCSR
