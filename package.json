@@ -1,6 +1,6 @@
 {
     "name"          : "fp-backend",
-    "version"       : "0.4.1",
+    "version"       : "0.4.2",
     "main"          : "./lib/index.js",
     "private"       : true,
     "description"   : "Flow Pilots backend framework, for internal use only",
@@ -17,7 +17,7 @@
         "express-resource": "~ 0.2.4",
         "findit": "~ 0.1.2",
         "jade": "~ 0.26.0",
-        "jadevu": "~ 0.0.9",
+        "jadevu": "git://github.com/rubenv/jadevu.git#master",
         "mobile-monkeypatches": "~ 0.0.1",
         "mongoose": "~ 2.6.4",
         "nib": "~ 0.4.1",
