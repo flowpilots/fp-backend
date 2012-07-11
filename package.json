@@ -1,6 +1,6 @@
 {
     "name"          : "fp-backend",
-    "version"       : "0.4.2",
+    "version"       : "0.4.3",
     "main"          : "./lib/index.js",
     "private"       : true,
     "description"   : "Flow Pilots backend framework, for internal use only",
@@ -22,7 +22,7 @@
         "mongoose": "~ 2.6.4",
         "nib": "~ 0.4.1",
         "stylus": "~ 0.27.0",
-        "superagent": "~ 0.4.1",
+        "superagent": "~ 0.5.0",
         "systemd": "~ 0.2.0"
     }
 }
