@@ -7,6 +7,7 @@ findit = require("findit")
 
 compiler = (name, basepath, opts, cb) ->
     {path, pack, skipHeader} = opts
+    requirePrefix = opts.requirePrefix || ""
     stripPrefix = new RegExp("^#{basepath}\/#{path}/")
     pack = pack.slice()
     pack.push name
@@ -87,7 +88,7 @@ compiler = (name, basepath, opts, cb) ->
                     return if not /.(coffee|js)$/.test(file)
                     file = file.replace(/coffee$/, "js") if /.coffee$/.test(file)
                     js = compiled[file]
-                    file = file.replace(stripPrefix, "")
+                    file = requirePrefix + file.replace(stripPrefix, "")
                     buf += "\nrequire.register(\"" + file + "\", function(module, exports, require){\n"
                     buf += js
                     buf += "\n}); // module: " + file + "\n"
