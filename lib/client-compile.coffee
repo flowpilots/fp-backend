@@ -5,7 +5,8 @@ coffee = require("coffee-script")
 closure = require("closure-compiler")
 findit = require("findit")
 
-compiler = (name, basepath, path, pack, cb) ->
+compiler = (name, basepath, opts, cb) ->
+    {path, pack, skipHeader} = opts
     stripPrefix = new RegExp("^#{basepath}\/#{path}/")
     pack = pack.slice()
     pack.push name
@@ -73,12 +74,14 @@ compiler = (name, basepath, path, pack, cb) ->
                 cb(err) if err
 
                 buf = ""
-                buf += "\n// CommonJS require()\n\n"
-                buf += "require = " + browser.require + ";\n\n"
-                buf += "require.modules = {};\n\n"
-                buf += "require.resolve = " + browser.resolve + ";\n\n"
-                buf += "require.register = " + browser.register + ";\n\n"
-                buf += "require.relative = " + browser.relative + ";\n\n"
+
+                if !skipHeader
+                    buf += "\n// CommonJS require()\n\n"
+                    buf += "require = " + browser.require + ";\n\n"
+                    buf += "require.modules = {};\n\n"
+                    buf += "require.resolve = " + browser.resolve + ";\n\n"
+                    buf += "require.register = " + browser.register + ";\n\n"
+                    buf += "require.relative = " + browser.relative + ";\n\n"
 
                 args.forEach (file) ->
                     return if not /.(coffee|js)$/.test(file)
@@ -177,7 +180,7 @@ module.exports = (basepath, options) ->
             for name, opts of options
                 if req.url == "/js/#{name}.bundle.js"
                     found = true
-                    compiler name, basepath, opts.path, opts.pack, () ->
+                    compiler name, basepath, opts, () ->
                         next()
 
             return next() if !found
