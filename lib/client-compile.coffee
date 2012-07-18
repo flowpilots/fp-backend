@@ -6,7 +6,7 @@ closure = require("closure-compiler")
 findit = require("findit")
 
 compiler = (name, basepath, opts, cb) ->
-    {path, pack, skipHeader} = opts
+    {path, pack, skipHeader, initWith} = opts
     requirePrefix = opts.requirePrefix || ""
     stripPrefix = new RegExp("^#{basepath}\/#{path}/")
     pack = pack.slice()
@@ -92,6 +92,9 @@ compiler = (name, basepath, opts, cb) ->
                     buf += "\nrequire.register(\"" + file + "\", function(module, exports, require){\n"
                     buf += js
                     buf += "\n}); // module: " + file + "\n"
+
+                if initWith
+                    buf += "require(\"" + initWith + "\");\n"
 
                 console.log "    \u001b[90m create : \u001b[0m\u001b[36m%s\u001b[0m", "public/js/#{name}.js"
                 fs.writeFile basepath + "/public/js/#{name}.js", buf, (err) ->
