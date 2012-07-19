@@ -4,6 +4,8 @@ fs = require("fs")
 coffee = require("coffee-script")
 closure = require("closure-compiler")
 findit = require("findit")
+jade = require("jade")
+jadevu = require("jadevu")
 
 compiler = (name, basepath, opts, cb) ->
     {path, pack, skipHeader, initWith} = opts
@@ -11,6 +13,8 @@ compiler = (name, basepath, opts, cb) ->
     stripPrefix = new RegExp("^#{basepath}\/#{path}/")
     pack = pack.slice()
     pack.push name
+
+    haveJadeTemplate = false
 
     statReply = (cb) ->
         (err, stats) ->
@@ -50,7 +54,7 @@ compiler = (name, basepath, opts, cb) ->
 
     prepareFile = (compiled) ->
         (file, cb) ->
-            return cb() if not /.(coffee|js)$/.test(file)
+            return cb() if not /.(coffee|js|jade)$/.test(file)
             fs.readFile file, "utf8", (err, js) ->
                 return cb(err) if err
                 mod = file.replace(stripPrefix, "")
@@ -60,6 +64,15 @@ compiler = (name, basepath, opts, cb) ->
                         js = coffee.compile(js, filename: file)
                         throw new Error("CoffeeScript compile failed for #{file}") if !js
                         file = file.replace(/coffee$/, "js")
+                    if /.jade$/.test(file)
+                        fn = jade.compile(js, filename: file)
+                        template = fn()
+                        start = "<script>".length
+                        if haveJadeTemplate
+                            start = template.indexOf("window.template._[")
+                        haveJadeTemplate = true
+                        js = template.substring(start, template.length - "</script>".length)
+                        throw new Error("Jade compile failed for #{file}") if !fn
                     compiled[file] = js
                     cb()
                 catch e
@@ -85,13 +98,20 @@ compiler = (name, basepath, opts, cb) ->
                     buf += "require.relative = " + browser.relative + ";\n\n"
 
                 args.forEach (file) ->
-                    return if not /.(coffee|js)$/.test(file)
-                    file = file.replace(/coffee$/, "js") if /.coffee$/.test(file)
-                    js = compiled[file]
-                    file = requirePrefix + file.replace(stripPrefix, "")
-                    buf += "\nrequire.register(\"" + file + "\", function(module, exports, require){\n"
-                    buf += js
-                    buf += "\n}); // module: " + file + "\n"
+                    if /.(coffee|js)$/.test(file)
+                        file = file.replace(/coffee$/, "js") if /.coffee$/.test(file)
+                        js = compiled[file]
+                        file = requirePrefix + file.replace(stripPrefix, "")
+                        buf += "\nrequire.register(\"" + file + "\", function(module, exports, require){\n"
+                        buf += js
+                        buf += "\n}); // module: " + file + "\n"
+
+                    if /.jade$/.test(file)
+                        src = compiled[file]
+                        file = requirePrefix + file.replace(stripPrefix, "")
+                        buf += "\n// Jade: " + file + "\n"
+                        buf += src
+                        buf += "\n// End jade: " + file + "\n\n"
 
                 if initWith
                     buf += "require(\"" + initWith + "\");\n"
@@ -184,7 +204,6 @@ module.exports = (basepath, options) ->
             for name, opts of options
                 if req.url == "/js/#{name}.bundle.js"
                     found = true
-                    compiler name, basepath, opts, () ->
-                        next()
+                    compiler name, basepath, opts, next
 
             return next() if !found
