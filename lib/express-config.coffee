@@ -22,6 +22,7 @@ module.exports = (options, app) ->
             return stylus(src)
                 .set('filename', path)
                 .set('compress', true)
+                .define('url', stylus.url(paths: [dirToProject + '/public/css/']))
                 .use(nib())
 
     if options.trackSession
