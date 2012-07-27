@@ -57,7 +57,7 @@ start = (options, configure) ->
     # Create app
     app = module.exports = express.createServer()
     require('./express-config')(options, app)
-    configure(app) if configure
+    configure(app, express) if configure
 
     # Start server
     launchApp(options, app)
