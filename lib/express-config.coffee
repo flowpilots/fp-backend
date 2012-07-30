@@ -1,5 +1,4 @@
 express = require 'express'
-gzip = require 'connect-gzip'
 stylus = require 'stylus'
 nib = require 'nib'
 
@@ -42,7 +41,6 @@ module.exports = (options, app) ->
         #app.use express.favicon(dirToProject + '/public/favicon.ico')
         app.use clientJSCompile(dirToProject, options.clientJSCompile) if options.useClientJSCompile
         app.use stylus.middleware(stylusOptions) if options.useStylus and app.settings.env == 'development'
-        app.use gzip.gzip()
         app.use express.logger(immediate: true)
         app.use express.static(dirToProject + '/public')
         app.use express.bodyParser()
