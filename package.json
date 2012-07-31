@@ -1,6 +1,6 @@
 {
     "name"          : "fp-backend",
-    "version"       : "0.5.3",
+    "version"       : "0.5.4",
     "main"          : "./lib/index.js",
     "private"       : true,
     "description"   : "Flow Pilots backend framework, for internal use only",
@@ -10,7 +10,7 @@
     "dependencies"  : {
         "async": "~ 0.1.22",
         "autoquit": "~ 0.1.2",
-        "closure-compiler": "~ 0.1.1",
+        "closure-compiler": "git://github.com/rubenv/node-closure.git#master",
         "coffee-script": "~ 1.3.3",
         "express": "2.5.9",
         "express-resource": "~ 0.2.4",
