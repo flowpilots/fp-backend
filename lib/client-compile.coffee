@@ -1,200 +1,213 @@
-async = require("async")
-http = require("http")
-fs = require("fs")
-coffee = require("coffee-script")
-closure = require("closure-compiler")
-findit = require("findit")
-jade = require("jade")
-jadevu = require("jadevu")
+_ = require 'underscore'
+async = require 'async'
+closure = require 'closure-compiler'
+coffee = require 'coffee-script'
+findit = require 'findit'
+fs = require 'fs'
+jade = require 'jade'
+jadevu = require 'jadevu'
+mkdirp = require 'mkdirp'
+path = require 'path'
 
-compiler = (name, basepath, opts, cb) ->
-    {path, pack, skipHeader, initWith} = opts
-    requirePrefix = opts.requirePrefix || ""
-    stripPrefix = new RegExp("^#{basepath}\/#{path}/")
-    pack = pack.slice()
-    pack.push name
+browser =
+    # Require a module.
+    require: (p) ->
+        mod = require.modules[p]
+        throw new Error("failed to require \"" + p + "\"") unless mod
+        if !mod.exports
+            mod.exports = {}
+            mod.call mod.exports, mod, mod.exports, require
+        mod.exports
+    
+    # Register a module
+    register: (path, fn) ->
+        require.modules[path] = fn
 
-    haveJadeTemplate = false
+class SourceFile
+    constructor: (@compileUnit, @fileName) ->
+        @output = ''
 
-    statReply = (cb) ->
-        (err, stats) ->
-            err = null if err and err.code = 'ENOENT'
-            cb(err, stats)
+        prefix = @compileUnit.compiler.options.requirePrefix || ""
+        strip = @compileUnit.compiler.stripPrefix
+        @name = prefix + @fileName.replace(strip, "").replace(/(\.(coffee|js))$/, "")
 
-    minify = (item, cb) ->
-        console.log "  \u001b[90m   create : \u001b[0m\u001b[36m%s\u001b[0m", "public/js/#{item}.min.js"
-        file = basepath + "/public/js/#{item}.js"
-        min_file = basepath + "/public/js/#{item}.min.js"
-        fs.readFile file, "utf8", (err, js) ->
-            cb(err) if err
-            closure.compile js, (err, out) ->
-                return cb(err) if err
-                fs.writeFile min_file, out, (err) ->
-                    cb(err)
+    prepare: (cb) ->
+        async.series [
+            (cb) => fs.readFile @fileName, "utf8", (err, @output) => cb(err)
+            (cb) => @process(cb)
+            (cb) => @wrap(cb)
+        ], cb
 
-    prepareMinified = (item, minCb) ->
+    process: (cb) -> cb(null)
+
+    wrap: (cb) -> cb(null)
+
+class JavaScriptSourceFile extends SourceFile
+    wrap: (cb) ->
+        @output = "require.register(\"#{@name}\", function (module, exports, require) {\n#{@output}\n});\n// Module: #{@name}\n"
+        cb(null)
+
+class CoffeeScriptSourceFile extends JavaScriptSourceFile
+    process: (cb) ->
+        @output = coffee.compile(@output, filename: @fileName)
+        cb(null)
+
+class JadeSourceFile extends SourceFile
+    process: (cb) ->
+        fn = jade.compile(@output, filename: @fileName)
+        template = fn()
+        start = "<script>".length
+        start = template.indexOf("window.template._[") if @compileUnit.haveJade
+        @compileUnit.haveJade = true
+        @output = template.substring(start, template.length - "</script>".length)
+        cb(null)
+
+    wrap: (cb) ->
+        @output = "// Jade: #{@name}\n#{@output}\n// End Jade: #{@name}\n"
+        cb(null)
+
+class CompileUnit
+    process: (cb) -> cb(null)
+
+    minify: (cb) ->
+        statReply = (cb) ->
+            (err, stats) ->
+                err = null if err and err.code = 'ENOENT'
+                cb(err, stats)
+
         async.parallel
-            devel: (cb) -> fs.stat basepath + "/public/js/#{item}.js", statReply(cb)
-            min: (cb) -> fs.stat basepath + "/public/js/#{item}.min.js", statReply(cb)
-        , (err, data) ->
-            minCb(err) if err
+            min: (cb) => fs.stat @minFile, statReply(cb)
+            max: (cb) => fs.stat @maxFile, statReply(cb)
+        , (err, data) =>
+            return cb(err) if err
+            return cb() if data.min && data.min.mtime >= data.max.mtime
 
-            if !data.min || data.min.mtime < data.devel.mtime
-                minify(item, minCb)
-            else
-                minCb()
-
-    walk = (dir, done) ->
-        results = []
-        finder = findit.find(dir)
-        finder.on 'file', (file) ->
-            results.push file
-        finder.on 'end', () ->
-            done null, results
-
-    prepareFile = (compiled) ->
-        (file, cb) ->
-            return cb() if not /.(coffee|js|jade)$/.test(file)
-            fs.readFile file, "utf8", (err, js) ->
+            fs.readFile @maxFile, 'utf8', (err, src) =>
                 return cb(err) if err
-                mod = file.replace(stripPrefix, "")
-                console.log "    \u001b[90mcompile : \u001b[0m\u001b[36m%s\u001b[0m", mod
-                try
-                    if /.coffee$/.test(file)
-                        js = coffee.compile(js, filename: file)
-                        throw new Error("CoffeeScript compile failed for #{file}") if !js
-                        file = file.replace(/coffee$/, "js")
-                    if /.jade$/.test(file)
-                        fn = jade.compile(js, filename: file)
-                        template = fn()
-                        start = "<script>".length
-                        if haveJadeTemplate
-                            start = template.indexOf("window.template._[")
-                        haveJadeTemplate = true
-                        js = template.substring(start, template.length - "</script>".length)
-                        throw new Error("Jade compile failed for #{file}") if !fn
-                    compiled[file] = js
-                    cb()
-                catch e
-                    cb(e)
+                closure.compile src, (err, out) =>
+                    return cb(err) if err
+                    console.log "  \u001b[90m   create : \u001b[0m\u001b[36m%s\u001b[0m", @minFile.replace(@compiler.tmpPath, "tmp/js")
+                    fs.writeFile @minFile, out, cb
 
-    prepareSource = (cb) ->
-        walk basepath + '/' + path, (err, args) ->
-            cb(err) if err
-            args.sort()
+class LibraryCompileUnit extends CompileUnit
+    constructor: (@compiler, @name) ->
+        @maxFile = path.normalize @compiler.libPath + "/#{@name}.js"
+        @minFile = path.normalize @compiler.tmpPath + "/#{@name}.min.js"
 
-            compiled = {}
-            async.forEachSeries args, prepareFile(compiled), (err) ->
-                cb(err) if err
+class SourceDirCompileUnit extends CompileUnit
+    constructor: (@compiler) ->
+        @srcPath = path.normalize @compiler.basePath + "/" + @compiler.options.path
+        @maxFile = path.normalize @compiler.tmpPath + "/#{@compiler.name}.js"
+        @minFile = path.normalize @compiler.tmpPath + "/#{@compiler.name}.min.js"
 
-                buf = ""
+        @inputs = []
+        @haveJade = false
 
-                if !skipHeader
-                    buf += "\n// CommonJS require()\n\n"
-                    buf += "require = " + browser.require + ";\n\n"
-                    buf += "require.modules = {};\n\n"
-                    buf += "require.resolve = " + browser.resolve + ";\n\n"
-                    buf += "require.register = " + browser.register + ";\n\n"
-                    buf += "require.relative = " + browser.relative + ";\n\n"
+    prepare: (cb) ->
+        finder = findit.find(@srcPath)
+        finder.on 'file', (file) => @queueSourceFile file
+        finder.on 'end', (err) =>
+            return cb(err) if err
+            @inputs = _.sortBy @inputs, (input) -> input.fileName
+            cb(null)
 
-                args.forEach (file) ->
-                    if /.(coffee|js)$/.test(file)
-                        file = file.replace(/coffee$/, "js") if /.coffee$/.test(file)
-                        js = compiled[file]
-                        file = requirePrefix + file.replace(stripPrefix, "")
-                        buf += "\nrequire.register(\"" + file + "\", function(module, exports, require){\n"
-                        buf += js
-                        buf += "\n}); // module: " + file + "\n"
+    queueSourceFile: (file) ->
+        @inputs.push new CoffeeScriptSourceFile(@, file) if /\.coffee$/.test(file)
+        @inputs.push new JavaScriptSourceFile(@, file) if /\.js$/.test(file)
+        @inputs.push new JadeSourceFile(@, file) if /\.jade$/.test(file)
 
-                    if /.jade$/.test(file)
-                        src = compiled[file]
-                        file = requirePrefix + file.replace(stripPrefix, "")
-                        buf += "\n// Jade: " + file + "\n"
-                        buf += src
-                        buf += "\n// End jade: " + file + "\n\n"
+    makeHeader: () ->
+        buf = ""
+        buf += "require = " + browser.require + ";\n"
+        buf += "require.modules = {};\n"
+        buf += "require.register = " + browser.register + ";\n\n"
+        return buf
 
-                if initWith
-                    buf += "require(\"" + initWith + "\");\n"
+    process: (cb) ->
+        prepareSource = (file, cb) -> file.prepare(cb)
+        async.forEachSeries @inputs, prepareSource, (err) =>
+            return cb(err) if err
+            
+            buf = ""
+            if !@compiler.options.skipHeader
+                buf += @makeHeader()
 
-                console.log "    \u001b[90m create : \u001b[0m\u001b[36m%s\u001b[0m", "public/js/#{name}.js"
-                fs.writeFile basepath + "/public/js/#{name}.js", buf, (err) ->
-                    cb(err)
+            for item in @inputs
+                buf += item.output
 
-    # refactored version of weepy's
-    # https://github.com/weepy/brequire/blob/master/browser/brequire.js
-    browser =
-        # Require a module.
-        require: (p) ->
-            path = require.resolve(p)
-            mod = require.modules[path]
-            throw new Error("failed to require \"" + p + "\"") unless mod
-            unless mod.exports
-                mod.exports = {}
-                mod.call mod.exports, mod, mod.exports, require.relative(path)
-            mod.exports
-        
-        # Resolve module path.
-        resolve: (path) ->
-            orig = path
-            reg = path + ".js"
-            index = path + "/index.js"
-            require.modules[reg] and reg or require.modules[index] and index or orig
-        
-        # Return relative require().
-        relative: (parent) ->
-            (p) ->
-                return require(p) unless "." == p[0]
-                path = parent.split("/")
-                segs = p.split("/")
-                path.pop()
-                i = 0
-                
-                while i < segs.length
-                    seg = segs[i]
-                    if ".." == seg
-                        path.pop()
-                    else path.push seg unless "." == seg
-                    i++
-                require path.join("/")
-        
-        # Register a module
-        register: (path, fn) ->
-            require.modules[path] = fn
+            if @compiler.options.initWith
+                buf += "require(\"#{@compiler.options.initWith}\");\n"
 
-    mergeTo = (ext, list) ->
-        (item, cb) ->
-            file = basepath + "/public/js/#{item}.#{ext}"
-            fs.readFile file, "utf8", (err, js) ->
-                cb(err) if err
-                list.push js
+            console.log "  \u001b[90m   create : \u001b[0m\u001b[36m%s\u001b[0m", @maxFile.replace(@compiler.tmpPath, "tmp/js")
+            fs.writeFile @maxFile, buf, cb
+
+class Compiler
+    constructor: (basePath, @name, @options = {}) ->
+        @basePath = path.normalize basePath
+        @tmpPath = path.normalize @basePath + "/tmp/js"
+        @outPath = path.normalize @basePath + "/public/js"
+        @libPath = path.normalize @basePath + "/lib/js"
+
+        @stripPrefix = new RegExp("^#{@basePath}#{@options.path}\/")
+        @buildQueue = []
+
+    prepareOutput: (cb) ->
+        async.parallel [
+            (cb) => mkdirp @tmpPath, cb
+            (cb) => mkdirp @outPath, cb
+        ], cb
+
+    queueLibraries: (cb) ->
+        for lib in @options.pack
+            @buildQueue.push new LibraryCompileUnit(@, lib)
+        cb()
+
+    queueSource: (cb) ->
+        unit = new SourceDirCompileUnit(@)
+        @buildQueue.push unit
+        unit.prepare(cb)
+
+    processQueue: (cb) ->
+        buildItem = (item, cb) -> item.process(cb)
+        async.forEach @buildQueue, buildItem, cb
+
+    bundle: (file, out, separator, cb) ->
+        sources = []
+
+        bundleItem = (item, cb) ->
+            fs.readFile item[file], 'utf8', (err, src) ->
+                return cb(err) if err
+                sources.push src
                 cb()
 
-    mergeMinifiedBundle = (cb) ->
-        cb(null) # Invoking CB immediately, the rest can happen in the background
-
-        async.forEach pack, prepareMinified, (err) ->
-            throw err if err
-
-            minSrc = []
-            async.forEachSeries pack, mergeTo('min.js', minSrc), (err) ->
-                throw err if err
-                fs.writeFile basepath + "/public/js/#{name}.bundle.min.js", minSrc.join('\n'), (err) ->
-                    console.log "  \u001b[90m    write : \u001b[0m\u001b[36m%s\u001b[0m", "public/js/#{name}.bundle.min.js"
-                    throw err if err
-
-    mergeBundle = (cb) ->
-        develSrc = []
-        async.forEachSeries pack, mergeTo('js', develSrc), (err) ->
+        async.forEachSeries @buildQueue, bundleItem, (err) =>
             return cb(err) if err
-            fs.writeFile basepath + "/public/js/#{name}.bundle.js", develSrc.join(';\n'), (err) ->
-                console.log "  \u001b[90m    write : \u001b[0m\u001b[36m%s\u001b[0m", "public/js/#{name}.bundle.js"
-                cb(err)
+            console.log "  \u001b[90m   bundle : \u001b[0m\u001b[36m%s\u001b[0m", out.replace(@outPath, "public/js")
+            fs.writeFile out, sources.join(separator), cb
 
-    async.series [
-        prepareSource
-        mergeBundle
-        mergeMinifiedBundle
-    ], cb
+    bundleMax: (cb) -> @bundle('maxFile', @outPath + "/#{@name}.bundle.js", ";\n", cb)
+    bundleMin: (cb) -> @bundle('minFile', @outPath + "/#{@name}.bundle.min.js", "\n", cb)
+
+    minifyQueue: (cb) ->
+        minify = (item, cb) -> item.minify(cb)
+        async.forEach @buildQueue, minify, cb
+
+    compile: (cb) ->
+        async.series [
+            (cb) => @prepareOutput(cb)
+            (cb) => @queueLibraries(cb)
+            (cb) => @queueSource(cb)
+            (cb) => @processQueue(cb)
+            (cb) => @bundleMax(cb)
+        ], (err) =>
+            return cb(err) if err
+            cb(null) if !@options.wait
+
+            async.series [
+                (cb) => @minifyQueue(cb)
+                (cb) => @bundleMin(cb)
+            ], (err) =>
+                cb(err) if @options.wait
 
 module.exports = (basepath, options) ->
         (req, res, next) ->
@@ -204,6 +217,10 @@ module.exports = (basepath, options) ->
             for name, opts of options
                 if req.url == "/js/#{name}.bundle.js"
                     found = true
-                    compiler name, basepath, opts, next
+                    #compiler name, basepath, opts, (err) ->
+                    #    return next(err) if err
+
+                    c = new Compiler(basepath, name, opts)
+                    c.compile(next)
 
             return next() if !found
