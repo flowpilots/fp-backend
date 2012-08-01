@@ -23,6 +23,9 @@ browser =
     register: (path, fn) ->
         require.modules[path] = fn
 
+runTask = (task, cb) -> task.exec cb
+minifier = async.queue runTask, 2
+
 class SourceFile
     constructor: (@compileUnit, @fileName) ->
         @output = ''
@@ -84,10 +87,15 @@ class CompileUnit
 
             fs.readFile @maxFile, 'utf8', (err, src) =>
                 return cb(err) if err
-                closure.compile src, (err, out) =>
-                    return cb(err) if err
-                    console.log "  \u001b[90m   create : \u001b[0m\u001b[36m%s\u001b[0m", @minFile.replace(@compiler.tmpPath, "tmp/js")
-                    fs.writeFile @minFile, out, cb
+
+                task =
+                    exec: (cb) =>
+                        closure.compile src, (err, out) =>
+                            return cb(err) if err
+                            console.log "  \u001b[90m   create : \u001b[0m\u001b[36m%s\u001b[0m", @minFile.replace(@compiler.tmpPath, "tmp/js")
+                            fs.writeFile @minFile, out, cb
+
+                minifier.push task, cb
 
 class LibraryCompileUnit extends CompileUnit
     constructor: (@compiler, @name) ->
