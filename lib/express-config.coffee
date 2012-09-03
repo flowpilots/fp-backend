@@ -27,6 +27,7 @@ module.exports = (options, app) ->
     if options.trackSession
         SessionStore = require './sessions'
         sessionOptions =
+            key: options.name + ".sid"
             secret: 'Flying with Flow Pilots'
             store: new SessionStore()
 
