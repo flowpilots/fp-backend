@@ -12,11 +12,25 @@ path = require 'path'
 browser =
     # Require a module.
     require: (p) ->
+        require.requireRelative(p)
+
+    requireRelative: (module, path = '.') ->
+        location = path + '/../' + module
+        pieces = []
+        for piece in location.split('/')
+            if piece == '.' || piece == ''
+                continue
+            else if piece == '..'
+                pieces.pop()
+            else
+                pieces.push piece
+        p = pieces.join('/')
+
         mod = require.modules[p]
-        throw new Error("failed to require \"" + p + "\"") unless mod
+        throw new Error("failed to require \"#{p}\" from \"#{path}\"") unless mod
         if !mod.exports
             mod.exports = {}
-            mod.call mod.exports, mod, mod.exports, require
+            mod.call mod.exports, mod, mod.exports, (module) -> require.requireRelative(module, p)
         mod.exports
     
     # Register a module
@@ -127,9 +141,12 @@ class SourceDirCompileUnit extends CompileUnit
 
     makeHeader: () ->
         buf = ""
-        buf += "require = " + browser.require + ";\n"
-        buf += "require.modules = {};\n"
-        buf += "require.register = " + browser.register + ";\n\n"
+        buf += "if (typeof(require) == 'undefined') {"
+        buf += "    require = " + browser.require + ";\n"
+        buf += "    require.modules = {};\n"
+        buf += "    require.register = " + browser.register + ";\n\n"
+        buf += "    require.requireRelative = " + browser.requireRelative + ";\n\n"
+        buf += "}"
         return buf
 
     process: (cb) ->

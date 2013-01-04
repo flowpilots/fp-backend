@@ -1,10 +1,11 @@
 express = require 'express'
 stylus = require 'stylus'
 nib = require 'nib'
+path = require 'path'
 
 clientJSCompile = require './client-compile'
 
-dirToProject = __dirname + '/../../../'
+dirToProject = path.dirname process.mainModule.filename
 
 # Needed for backbone.js
 contentSwitch = () ->
@@ -35,23 +36,18 @@ module.exports = (options, app) ->
         app.set 'views', dirToProject + '/src/views'
         app.set 'view engine', 'jade'
         if options.useLayout
-            app.set 'view options', layout: dirToProject + '/src/views/_layout.jade'
-        else
-            app.set 'view options', layout: false
+            throw new Error('Layouts are no longer supported in express, put them in your app!')
         app.set 'jsonp callback', true
         #app.use express.favicon(dirToProject + '/public/favicon.ico')
         app.use clientJSCompile(dirToProject, options.clientJSCompile) if options.useClientJSCompile
         app.use stylus.middleware(stylusOptions) if options.useStylus and app.settings.env == 'development'
-        app.use express.logger(immediate: true)
+        app.use express.logger()
         app.use express.static(dirToProject + '/public')
         app.use express.bodyParser()
         app.use express.cookieParser()
         app.use express.session sessionOptions if options.trackSession
         app.use express.methodOverride()
         app.use contentSwitch()
-
-    app.configure 'development', ->
-        app.use express.profiler()
 
     app.configure ->
         app.use app.router
