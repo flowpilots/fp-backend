@@ -2,7 +2,7 @@ _ = require 'underscore'
 async = require 'async'
 closure = require 'closure-compiler'
 coffee = require 'coffee-script'
-findit = require 'findit'
+walkdir = require 'walkdir'
 fs = require 'fs'
 jade = require 'jade'
 jadevu = require 'jadevu'
@@ -32,7 +32,8 @@ class SourceFile
 
         prefix = @compileUnit.compiler.options.requirePrefix || ""
         strip = @compileUnit.compiler.stripPrefix
-        @name = prefix + @fileName.replace(strip, "").replace(/(\.(coffee|js))$/, "")
+
+        @name = prefix + @fileName.substring(strip.length).replace(/(\.(coffee|js))$/, "")
 
     prepare: (cb) ->
         async.series [
@@ -99,20 +100,20 @@ class CompileUnit
 
 class LibraryCompileUnit extends CompileUnit
     constructor: (@compiler, @name) ->
-        @maxFile = path.normalize @compiler.libPath + "/#{@name}.js"
-        @minFile = path.normalize @compiler.tmpPath + "/#{@name}.min.js"
+        @maxFile = path.join @compiler.libPath, "#{@name}.js"
+        @minFile = path.join @compiler.tmpPath, "#{@name}.min.js"
 
 class SourceDirCompileUnit extends CompileUnit
     constructor: (@compiler) ->
-        @srcPath = path.normalize @compiler.basePath + "/" + @compiler.options.path
-        @maxFile = path.normalize @compiler.tmpPath + "/#{@compiler.name}.js"
-        @minFile = path.normalize @compiler.tmpPath + "/#{@compiler.name}.min.js"
+        @srcPath = path.join @compiler.basePath, @compiler.options.path
+        @maxFile = path.join @compiler.tmpPath, "#{@compiler.name}.js"
+        @minFile = path.join @compiler.tmpPath, "#{@compiler.name}.min.js"
 
         @inputs = []
         @haveJade = false
 
     prepare: (cb) ->
-        finder = findit.find(@srcPath)
+        finder = walkdir(@srcPath)
         finder.on 'file', (file) => @queueSourceFile file
         finder.on 'end', (err) =>
             return cb(err) if err
@@ -156,7 +157,7 @@ class Compiler
         @outPath = path.normalize @basePath + "/public/js"
         @libPath = path.normalize @basePath + "/lib/js"
 
-        @stripPrefix = new RegExp("^#{@basePath}#{@options.path}\/")
+        @stripPrefix = path.join(@basePath, @options.path) + '/'
         @buildQueue = []
 
     prepareOutput: (cb) ->
