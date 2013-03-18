@@ -15,9 +15,7 @@ browser =
         require.requireRelative(p)
 
     requireRelative: (module, path = '.') ->
-        location = module
-        if module[0] == '.'
-            location = path + '/../' + module
+        location = path + '/../' + module
         pieces = []
         for piece in location.split('/')
             if piece == '.' || piece == ''
