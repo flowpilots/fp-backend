@@ -39,18 +39,12 @@ Require =
                 pieces.push piece
         p = pieces.join('/')
 
-        return a if a = Require.exports[p]
-
-        fn = Require.modules[p]
-        throw new Error("failed to require \"#{p}\" from \"#{path}\"") unless fn
-
-        mod = {
-            name: p
-            exports: {}
-        }
-        fn.call mod.exports, mod, mod.exports, Require.create(p)
-        Require.exports[p] = mod.exports
-        return mod.exports
+        mod = Require.modules[p]
+        throw new Error("failed to require \"#{p}\" from \"#{path}\"") unless mod
+        if !mod.exports
+            mod.exports = {}
+            mod.call mod.exports, mod, mod.exports, Require.create(p)
+        mod.exports
     
 
 runTask = (task, cb) -> task.exec cb
@@ -121,35 +115,17 @@ class CompileUnit
 
                 task =
                     exec: (cb) =>
-                        @doMinify(src, cb)
-
+                        closure.compile src, (err, out) =>
+                            return cb(err) if err
+                            console.log "  \u001b[90m   create : \u001b[0m\u001b[36m%s\u001b[0m", @minFile.replace(@compiler.tmpPath, "tmp/js")
+                            fs.writeFile @minFile, out, cb
 
                 minifier.push task, cb
-
-    doMinify: (src, cb) ->
-        closure.compile src, (err, out) =>
-            return cb(err) if err
-            console.log "  \u001b[90m   create : \u001b[0m\u001b[36m%s\u001b[0m", @minFile.replace(@compiler.tmpPath, "tmp/js")
-            fs.writeFile @minFile, out, cb
 
 class LibraryCompileUnit extends CompileUnit
     constructor: (@compiler, @name) ->
         @maxFile = path.join @compiler.libPath, "#{@name}.js"
         @minFile = path.join @compiler.tmpPath, "#{@name}.min.js"
-
-    doMinify: (src, cb) ->
-        bundledPath = @maxFile.replace(/\.js$/, ".min.js")
-        fs.exists bundledPath, (exists) =>
-            if exists
-                # Reuse bundled minified file.
-                console.log "  \u001b[90m   copy   : \u001b[0m\u001b[36m%s\u001b[0m", bundledPath.replace(@compiler.libPath, "lib/js")
-                out = fs.createWriteStream(@minFile)
-                out.on 'close', cb
-                fs.createReadStream(bundledPath).pipe(out)
-                return
-
-            # Minify it ourselves.
-            super(src, cb)
 
 class SourceDirCompileUnit extends CompileUnit
     constructor: (@compiler) ->
@@ -180,8 +156,7 @@ class SourceDirCompileUnit extends CompileUnit
         buf += "        create: " + Require.create + ",\n"
         buf += "        register: " + Require.register + ",\n"
         buf += "        load: " + Require.load + ",\n"
-        buf += "        modules: {},\n"
-        buf += "        exports: {}\n"
+        buf += "        modules: {}\n"
         buf += "    };"
         buf += "    require = Require.create();\n"
         buf += "}"
