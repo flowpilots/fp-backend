@@ -9,23 +9,12 @@ jadevu = require 'jadevu'
 mkdirp = require 'mkdirp'
 path = require 'path'
 
-Require =
-    create: (path = '.') ->
-        fn = (module) ->
-            Require.load(module, path)
+browser =
+    # Require a module.
+    require: (p) ->
+        require.requireRelative(p)
 
-        # Utility shortcut.
-        fn.new = (file, a, b) ->
-            type = fn(file)
-            return new type(a, b)
-
-        return fn
-
-    # Register a module
-    register: (path, fn) ->
-        Require.modules[path] = fn
-
-    load: (module, path = '.') ->
+    requireRelative: (module, path = '.') ->
         location = module
         if module[0] == '.'
             location = path + '/../' + module
@@ -39,13 +28,16 @@ Require =
                 pieces.push piece
         p = pieces.join('/')
 
-        mod = Require.modules[p]
+        mod = require.modules[p]
         throw new Error("failed to require \"#{p}\" from \"#{path}\"") unless mod
         if !mod.exports
             mod.exports = {}
-            mod.call mod.exports, mod, mod.exports, Require.create(p)
+            mod.call mod.exports, mod, mod.exports, (module) -> require.requireRelative(module, p)
         mod.exports
     
+    # Register a module
+    register: (path, fn) ->
+        require.modules[path] = fn
 
 runTask = (task, cb) -> task.exec cb
 minifier = async.queue runTask, 2
@@ -72,7 +64,7 @@ class SourceFile
 
 class JavaScriptSourceFile extends SourceFile
     wrap: (cb) ->
-        @output = "Require.register(\"#{@name}\", function (module, exports, require) {\n#{@output}\n});\n// Module: #{@name}\n"
+        @output = "require.register(\"#{@name}\", function (module, exports, require) {\n#{@output}\n});\n// Module: #{@name}\n"
         cb(null)
 
 class CoffeeScriptSourceFile extends JavaScriptSourceFile
@@ -152,13 +144,10 @@ class SourceDirCompileUnit extends CompileUnit
     makeHeader: () ->
         buf = ""
         buf += "if (typeof(require) == 'undefined') {"
-        buf += "    Require = {\n"
-        buf += "        create: " + Require.create + ",\n"
-        buf += "        register: " + Require.register + ",\n"
-        buf += "        load: " + Require.load + ",\n"
-        buf += "        modules: {}\n"
-        buf += "    };"
-        buf += "    require = Require.create();\n"
+        buf += "    require = " + browser.require + ";\n"
+        buf += "    require.modules = {};\n"
+        buf += "    require.register = " + browser.register + ";\n\n"
+        buf += "    require.requireRelative = " + browser.requireRelative + ";\n\n"
         buf += "}"
         return buf
 
