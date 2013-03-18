@@ -2,7 +2,7 @@ express = require 'express'
 stylus = require 'stylus'
 nib = require 'nib'
 
-clientJSCompile = require './client-compile'
+clientJSCompile = require 'client-compiler'
 
 dirToProject = __dirname + '/../../../'
 
@@ -40,7 +40,7 @@ module.exports = (options, app) ->
             app.set 'view options', layout: false
         app.set 'jsonp callback', true
         #app.use express.favicon(dirToProject + '/public/favicon.ico')
-        app.use clientJSCompile(dirToProject, options.clientJSCompile) if options.useClientJSCompile
+        app.use clientJSCompile.middleware(dirToProject, options.clientJSCompile) if options.useClientJSCompile
         app.use stylus.middleware(stylusOptions) if options.useStylus and app.settings.env == 'development'
         app.use express.logger(immediate: true)
         app.use express.static(dirToProject + '/public')

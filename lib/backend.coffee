@@ -6,7 +6,6 @@ defaultOptions =
     useMonkeyPatches: true
     useClientJSCompile: true
     useStylus: true
-    useJadeVu: true
     useLayout: false
     useAutoQuit: true
     autoQuitTimeOut: 600
@@ -51,7 +50,6 @@ start = (options, configure) ->
     # Optional modules
     require 'systemd' if options.useSystemd
     require 'mobile-monkeypatches' if options.useMonkeyPatches
-    require 'jadevu' if options.useJadeVu
     require 'autoquit' if options.useAutoQuit
 
     # Create app
