@@ -1,7 +1,9 @@
 express = require 'express'
 require 'express-resource'
+path = require 'path'
 
 defaultOptions =
+    projectDir: path.normalize(__dirname + '/../../../')
     useSystemd: true
     useMonkeyPatches: true
     useClientJSCompile: true
@@ -47,19 +49,28 @@ start = (options, configure) ->
     [options, configure] = mergeOptions options, configure
     config = options
 
+    # Connect to DB
+    module.exports.db = createDb()
+
     # Optional modules
     require 'systemd' if options.useSystemd
     require 'mobile-monkeypatches' if options.useMonkeyPatches
     require 'autoquit' if options.useAutoQuit
 
     # Create app
-    app = module.exports = express.createServer()
+    app = express.createServer()
     require('./express-config')(options, app)
     configure(app, express) if configure
 
     # Start server
     launchApp(options, app)
 
+createDb = () ->
+    db = process.env.MONGOLAB_URI || 'mongodb://localhost/' + (process.env.MONGO_DB || config.appName)
+
+    mongoose = require 'mongoose'
+    mongoose.connect db
+    return mongoose
+
 module.exports =
     start: start
-    config: () -> config # hack needed to prevent circular refs

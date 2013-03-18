@@ -4,8 +4,6 @@ nib = require 'nib'
 
 clientJSCompile = require 'client-compiler'
 
-dirToProject = __dirname + '/../../../'
-
 # Needed for backbone.js
 contentSwitch = () ->
     (req, res, next) ->
@@ -14,6 +12,8 @@ contentSwitch = () ->
         next()
 
 module.exports = (options, app) ->
+    dirToProject = options.projectDir
+
     stylusOptions =
         src: dirToProject + '/src'
         dest: dirToProject + '/public'

@@ -1,4 +1,4 @@
-db = require './db'
+db = require('./backend').db
 express = require 'express'
 
 ActiveSessionSchema = new db.Schema
