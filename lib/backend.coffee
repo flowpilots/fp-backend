@@ -7,6 +7,7 @@ defaultOptions =
     useClientJSCompile: true
     useStylus: true
     useJadeVu: true
+    useLayout: false
     useAutoQuit: true
     autoQuitTimeOut: 600
     allowCSR: false
@@ -54,7 +55,7 @@ start = (options, configure) ->
     require 'autoquit' if options.useAutoQuit
 
     # Create app
-    app = module.exports = express()
+    app = module.exports = express.createServer()
     require('./express-config')(options, app)
     configure(app, express) if configure
 

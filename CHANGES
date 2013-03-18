@@ -1,11 +1,3 @@
-v0.6.0 (XX/XX/2013)
-===================
-
-Updated all dependencies to their latest versions. Which means a migration to
-Express 3. Things might break, this is a big change!
-
-You can now use relative requires in client-side code.
-
 v0.5.9 (04/01/2013)
 ===================
 
