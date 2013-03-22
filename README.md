@@ -3,6 +3,8 @@ v0.6.0 (04/01/2013)
 
 Branch off for 0.6: exclude client-compiler.
 
+Remove stylus support.
+
 v0.5.9 (04/01/2013)
 ===================
 

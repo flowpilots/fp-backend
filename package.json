@@ -20,9 +20,6 @@
     "mobile-monkeypatches": "~ 0.0.1",
     "mongoose": "~ 2.7.2",
     "superagent": "~ 0.6.0",
-    "systemd": "~ 0.2.1",
-    "client-compiler": "~0.1.4",
-    "nib": "~0.9.1",
-    "stylus": "~0.32.1"
+    "systemd": "~ 0.2.1"
   }
 }

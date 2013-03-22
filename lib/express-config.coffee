@@ -10,16 +10,6 @@ contentSwitch = () ->
 module.exports = (options, app) ->
     dirToProject = options.projectDir
 
-    stylusOptions =
-        src: dirToProject + '/src'
-        dest: dirToProject + '/public'
-        compile: (src, path) ->
-            return stylus(src)
-                .set('filename', path)
-                .set('compress', true)
-                .define('url', stylus.url(paths: [dirToProject + '/public/css/']))
-                .use(nib())
-
     if options.trackSession
         SessionStore = require './sessions'
         sessionOptions =
@@ -36,13 +26,6 @@ module.exports = (options, app) ->
             app.set 'view options', layout: false
         app.set 'jsonp callback', true
         #app.use express.favicon(dirToProject + '/public/favicon.ico')
-        if app.settings.env == 'development'
-            # Client-side compilation
-            stylus = require 'stylus'
-            nib = require 'nib'
-            clientJSCompile = require 'client-compiler'
-            app.use clientJSCompile.middleware(dirToProject, options.clientJSCompile) if options.useClientJSCompile
-            app.use stylus.middleware(stylusOptions) if options.useStylus
         app.use express.logger(immediate: true)
         app.use express.static(dirToProject + '/public')
         app.use express.bodyParser()

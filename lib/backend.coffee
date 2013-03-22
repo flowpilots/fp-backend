@@ -7,7 +7,6 @@ defaultOptions =
     useSystemd: true
     useMonkeyPatches: true
     useClientJSCompile: true
-    useStylus: true
     useLayout: false
     useAutoQuit: true
     autoQuitTimeOut: 600
