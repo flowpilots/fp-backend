@@ -17,7 +17,16 @@ class Store extends express.session.Store
         s =
             sid: sid
             data: session
-        ActiveSession.update { sid: sid }, s, { upsert: true }, cb
+        ActiveSession.update { sid: sid }, s, { upsert: true }, (err) ->
+            cb(err)
+
+            # Delete old sessions in the background
+            rand = Math.random()
+            if rand < 0.05 # Once every 20 requests (approximately)
+                # Expire sessions after three months
+                cutOff = new Date()
+                cutOff.setMonth(cutOff.getMonth() - 3)
+                ActiveSession.remove { 'data.cookie.expires': { $lt: cutOff } }, () -> # Do nothing!
 
     destroy: (sid, cb) ->
         ActiveSession.remove { sid: sid }, cb

@@ -1,4 +1,9 @@
-v0.6.0 (04/01/2013)
+v0.6.1 (26/03/2013)
+===================
+
+Periodically remove sessions.
+
+v0.6.0 (20/03/2013)
 ===================
 
 Branch off for 0.6: exclude client-compiler.
