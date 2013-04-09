@@ -45,8 +45,6 @@ module.exports = (options, app) ->
         )
 
     app.configure 'production', ->
-        if options.useAutoQuit
-            app.autoQuit({ timeOut: options.autoQuitTimeOut })
         app.use require('./crash-reporter')(options)
         app.use express.errorHandler()
 

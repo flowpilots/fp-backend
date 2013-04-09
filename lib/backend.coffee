@@ -1,6 +1,7 @@
 express = require 'express'
 require 'express-resource'
 path = require 'path'
+http = require 'http'
 
 defaultOptions =
     projectDir: path.normalize(__dirname + '/../../../')
@@ -42,7 +43,10 @@ launchApp = (options, app) ->
     else
         port = options.standalonePort
     console.log "Listening (#{port})"
-    app.listen port
+    server = http.createServer(app)
+    if options.useAutoQuit
+        server.autoQuit({ timeOut: options.autoQuitTimeOut })
+    server.listen(port)
 
 start = (options, configure) ->
     [options, configure] = mergeOptions options, configure
