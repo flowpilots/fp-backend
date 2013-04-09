@@ -25,6 +25,7 @@ module.exports = (options, app) ->
         else
             app.set 'view options', layout: false
         app.set 'jsonp callback', true
+        app.set 'trust proxy', true
         #app.use express.favicon(dirToProject + '/public/favicon.ico')
         app.use express.logger(immediate: true)
         app.use express.static(dirToProject + '/public')
