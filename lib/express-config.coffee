@@ -34,9 +34,6 @@ module.exports = (options, app) ->
         app.use express.methodOverride()
         app.use contentSwitch()
 
-    app.configure 'development', ->
-        app.use express.profiler()
-
     app.configure ->
         app.use app.router
 

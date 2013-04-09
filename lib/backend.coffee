@@ -57,7 +57,7 @@ start = (options, configure) ->
     require 'autoquit' if options.useAutoQuit
 
     # Create app
-    app = express.createServer()
+    app = express()
     require('./express-config')(options, app)
     configure(app, express) if configure
 
