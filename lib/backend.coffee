@@ -44,7 +44,7 @@ launchApp = (options, app) ->
         port = options.standalonePort
     console.log "Listening (#{port})"
     server = http.createServer(app)
-    if options.useAutoQuit
+    if options.useAutoQuit && process.env.NODE_ENV == 'production'
         server.autoQuit({ timeOut: options.autoQuitTimeOut })
     server.listen(port)
 
