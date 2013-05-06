@@ -17,7 +17,7 @@
     "jade": "~0.27.7",
     "mobile-monkeypatches": "~ 0.0.1",
     "mongoose": "~ 2.7.2",
-    "superagent": "~ 0.6.0",
+    "superagent": "~ 0.14.1",
     "systemd": "~ 0.2.1",
     "express": "~3.2.2",
     "express-resource": "~1.0.0"
