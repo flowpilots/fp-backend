@@ -1,6 +1,6 @@
 {
   "name": "fp-backend",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "main": "./lib/index.js",
   "private": true,
   "description": "Flow Pilots backend framework, for internal use only",
@@ -9,7 +9,7 @@
   ],
   "author": "Ruben Vermeersch <ruben@flowpilots.com>",
   "engines": {
-    "node": ">=0.8.0 <0.9.0"
+    "node": ">=0.8.0"
   },
   "dependencies": {
     "autoquit": "~ 0.1.2",
