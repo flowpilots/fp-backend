@@ -1,3 +1,13 @@
+v0.8.0 (16/05/2013)
+===================
+
+Massive version bump for Mongoose, fixes Node 0.10 problems.
+
+v0.7.6 (06/05/2013)
+===================
+
+Compile rather than bundle CoffeeScript.
+
 v0.7.5 (06/05/2013)
 ===================
 

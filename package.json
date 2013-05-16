@@ -1,6 +1,6 @@
 {
   "name": "fp-backend",
-  "version": "0.7.6",
+  "version": "0.8.0",
   "main": "./lib/index.js",
   "private": true,
   "description": "Flow Pilots backend framework, for internal use only",
@@ -22,10 +22,10 @@
     "autoquit": "~ 0.1.2",
     "jade": "~0.27.7",
     "mobile-monkeypatches": "~ 0.0.1",
-    "mongoose": "~ 2.7.2",
+    "mongoose": "~ 3.6.11",
     "superagent": "~ 0.14.1",
     "systemd": "~ 0.2.1",
-    "express": "~3.2.2",
+    "express": "~3.2.4",
     "express-resource": "~1.0.0"
   }
 }
