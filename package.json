@@ -24,7 +24,7 @@
     "mobile-monkeypatches": "~ 0.0.1",
     "mongoose": "~ 3.6.11",
     "superagent": "~ 0.14.1",
-    "systemd": "~ 0.2.1",
+    "systemd": "~ 0.2.4",
     "express": "~3.2.4",
     "express-resource": "~1.0.0"
   }
