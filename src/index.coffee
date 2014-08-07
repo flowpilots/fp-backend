@@ -31,7 +31,7 @@ mergeOptions = (options, configure) ->
     # Merge options
     options = {} if !options
     for key, val of defaultOptions
-        options[key] = val if !options[key]
+        options[key] = val if !options.hasOwnProperty(key)
 
     return [options, configure]
 
